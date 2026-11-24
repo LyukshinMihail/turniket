@@ -1,0 +1,56 @@
+# --- Секреты и локальная конфигурация ---
+.env
+.env.*
+!.env.example
+
+# --- Данные сервиса ---
+/data/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+coverage.xml
+htmlcov/
+build/
+dist/
+
+# --- IDE / редакторы ---
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# --- Логи и временные файлы ---
+*.log
+logs/
+*.pid
+*.tmp
+*.bak
+*.backup
+*.orig
+*.rej
+.cache/
+
+# --- macOS / Windows ---
+.DS_Store
+._*
+.AppleDouble
+Thumbs.db
+desktop.ini

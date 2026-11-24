@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Проходные — журнал событий</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 22V10h3v12H9zm5.5 0V10h3v5h5v-5h3v12h-3v-4h-5v4h-3z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="30" height="30"><rect width="32" height="32" rx="9" fill="url(#g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#4338ca"/></linearGradient></defs><path d="M9 22V10h3v12H9zm5.5 0V10h3v5h5v-5h3v12h-3v-4h-5v4h-3z" fill="white"/></svg>
+        </div>
+        <div class="brand-text">
+          <h1>Журнал проходных</h1>
+          <p id="deviceLine">Загрузка проходных…</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span id="connPill" class="pill pill-wait"><i class="dot"></i><span id="connText">Подключение…</span></span>
+        <button id="addDeviceBtn" class="btn btn-primary" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Проходная
+        </button>
+        <button id="refreshBtn" class="btn btn-ghost" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Обновить
+        </button>
+      </div>
+    </header>
+
+    <section class="stats" aria-label="Статистика за сегодня">
+      <article class="stat">
+        <span class="stat-label">Проходов сегодня</span>
+        <strong id="statPasses" class="stat-value">—</strong>
+        <span class="stat-hint">входы и выходы</span>
+      </article>
+      <article class="stat">
+        <span class="stat-label">Вход / выход</span>
+        <strong class="stat-value"><span id="statIn" class="in-num">—</span><span class="sep">/</span><span id="statOut" class="out-num">—</span></strong>
+        <span class="stat-hint">за текущие сутки</span>
+      </article>
+      <article class="stat">
+        <span class="stat-label">Уникальных кодов</span>
+        <strong id="statCodes" class="stat-value">—</strong>
+        <span class="stat-hint">прошедших сегодня</span>
+      </article>
+      <article class="stat">
+        <span class="stat-label">Всего событий</span>
+        <strong id="statTotal" class="stat-value">—</strong>
+        <span class="stat-hint" id="statLast">в базе сервиса</span>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-view="events" role="tab">Лента событий</button>
+          <button class="tab" data-view="codes" role="tab">Коды пользователей</button>
+          <button class="tab" data-view="devices" role="tab">Проходные</button>
+        </div>
+        <div class="filters">
+          <select id="deviceSelect" aria-label="Проходная">
+            <option value="">Все проходные</option>
+          </select>
+          <label class="search">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input id="searchInput" type="search" placeholder="Поиск по коду или UID" autocomplete="off">
+          </label>
+          <select id="directionSelect" aria-label="Направление">
+            <option value="">Все направления</option>
+            <option value="in">Вход</option>
+            <option value="out">Выход</option>
+          </select>
+          <label class="checkbox"><input id="passesOnly" type="checkbox"> Только проходы</label>
+        </div>
+      </div>
+
+      <div id="eventsView" class="view">
+        <div class="table-wrap">
+          <table class="data-table events-table">
+            <thead>
+              <tr>
+                <th class="col-time">Время</th>
+                <th class="col-device">Проходная</th>
+                <th class="col-event">Событие</th>
+                <th class="col-code">Код</th>
+                <th class="col-dir">Направление</th>
+                <th class="col-user">Пользователь</th>
+              </tr>
+            </thead>
+            <tbody id="eventsBody"></tbody>
+          </table>
+          <div id="eventsEmpty" class="empty" hidden>
+            <div class="empty-icon">⌁</div>
+            <p>Событий пока нет</p>
+            <span>Добавьте проходную или дождитесь первого прохода — запись появится здесь автоматически.</span>
+          </div>
+        </div>
+        <div class="pager">
+          <span id="eventsInfo" class="pager-info">—</span>
+          <div class="pager-buttons">
+            <button id="eventsPrev" class="btn btn-ghost" type="button" disabled>← Новее</button>
+            <button id="eventsNext" class="btn btn-ghost" type="button" disabled>Позже →</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="codesView" class="view" hidden>
+        <div class="table-wrap">
+          <table class="data-table codes-table">
+            <thead>
+              <tr>
+                <th>Проходная</th>
+                <th>Код</th>
+                <th>Проходов</th>
+                <th>Вход</th>
+                <th>Выход</th>
+                <th>Первый раз</th>
+                <th>Последний раз</th>
+              </tr>
+            </thead>
+            <tbody id="codesBody"></tbody>
+          </table>
+          <div id="codesEmpty" class="empty" hidden>
+            <div class="empty-icon">⌁</div>
+            <p>Кодов пока нет</p>
+            <span>Здесь появятся все коды, которые проходили через выбранные проходные.</span>
+          </div>
+        </div>
+        <div class="pager">
+          <span id="codesInfo" class="pager-info">—</span>
+          <div class="pager-buttons">
+            <button id="codesPrev" class="btn btn-ghost" type="button" disabled>← Назад</button>
+            <button id="codesNext" class="btn btn-ghost" type="button" disabled>Далее →</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="devicesView" class="view" hidden>
+        <div id="devicesGrid" class="devices-grid"></div>
+        <div id="devicesEmpty" class="empty-static" hidden>
+          <div class="empty-icon">⌁</div>
+          <p>Проходные не добавлены</p>
+          <span>Нажмите «Проходная», укажите название и адрес турникета.</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>PERCo KT02.9 · события категории «Доступ по идентификатору» · SQLite</span>
+      <span id="syncInfo">—</span>
+    </footer>
+  </div>
+
+  <dialog id="deviceDialog" class="modal">
+    <form id="deviceForm">
+      <h2 id="deviceDialogTitle">Новая проходная</h2>
+      <div class="field">
+        <label for="deviceName">Название (алиас)</label>
+        <input id="deviceName" name="name" maxlength="64" placeholder="КПП-1" required>
+      </div>
+      <div class="field">
+        <label for="deviceHost">Адрес проходной</label>
+        <input id="deviceHost" name="host" maxlength="255" placeholder="10.3.198.200" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="devicePort">Порт</label>
+          <input id="devicePort" name="port" type="number" min="1" max="65535" value="80" required>
+        </div>
+        <div class="field">
+          <label for="devicePassword">Пароль</label>
+          <input id="devicePassword" name="password" type="password" maxlength="128" placeholder="если задан">
+        </div>
+      </div>
+      <p id="deviceError" class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button id="deviceCancel" class="btn btn-ghost" type="button">Отмена</button>
+        <button id="deviceSubmit" class="btn btn-primary" type="submit">Добавить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
